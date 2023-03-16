@@ -8,8 +8,9 @@ router.get("/articles", (req, res)=>{
     Article.find({}, (error, data)=>{
         if(error){
             res.status(500).send("Failed. Try again later");
+        } else {
+            res.json(data);
         }
-        res.json(data);
     });
 })
 
@@ -18,8 +19,9 @@ router.get("/articles/:id", (req, res)=>{
         Article.find({id: req.params.id}, (error, data)=>{
             if(error){
                 res.status(500).send("Failed. Try again later");
-            }
-            res.json(data);
+            } else {
+                res.json(data);
+            }            
         });
     }    
 })
@@ -38,13 +40,41 @@ router.post("/articles/comment", (req, res)=>{
 
 router.put("/articles/:id", (req, res)=>{
     let payload = req.body;
-    Article.updateOne({id: req.params.id}, payload);
-    res.send("Update success!");
+    // Article.updateOne({id: req.params.id}, payload);
+    // Alternative:
+    Article.findOne({id: req.params.id}, (error, data)=>{
+        if(error){
+            res.status(404).send(`Article with id ${req.params.id} not found`);
+        } else {
+            // for each field in the payload, find it in the article and update it.
+            for(item in payload){
+                data[item] = payload[item];
+            }
+            data.save();
+            res.send({
+                "status": "Update Sucess",
+                "data": data
+            });
+        }
+    })    
 })
 
 router.delete("/articles/:id", (req, res)=>{
-    Article.deleteOne({id: req.params.id});
-    res.send("Delete success!");
+    // Article.deleteOne({id: req.params.id});
+    Article.findOneAndDelete({id: req.params.id}, (error, data)=>{
+        if(error){
+            res.status(404).send({
+                "status": `Article with id ${req.params.id} not found`,
+                "data": null
+            });
+        } else {
+            res.send({
+                "status": "Delete Sucess",
+                "data": data
+            });
+
+        }
+    })
 })
 
 module.exports = router;
